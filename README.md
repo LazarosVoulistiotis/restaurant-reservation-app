@@ -12,7 +12,7 @@ The project follows a **frontend + backend + database** architecture and is bein
 
 ## Overview
 
-The Restaurant Reservation App allows users to:
+The **Restaurant Reservation App** allows users to:
 - register and log in securely
 - browse available restaurants
 - search restaurants by **name** or **location**
@@ -27,11 +27,29 @@ The system is implemented as a distributed three-tier application:
 
 ---
 
+## Coursework Alignment
+
+This project is designed to align with the CN6035 coursework requirements, which emphasize:
+- clean and functional **frontend UI/UX**
+- correct **frontend-backend communication**
+- **JWT-based authentication**
+- proper **database integration**
+- clear **installation instructions** and **functional description** in the README
+- presentation-ready evidence such as screenshots or live demo
+
+---
+
 ## Tech Stack
 
 ### Frontend
 - React Native
 - Expo
+- React Navigation
+- Axios
+- AsyncStorage
+- react-native-gesture-handler
+- react-native-screens
+- react-native-safe-area-context
 
 ### Backend
 - Node.js
@@ -58,7 +76,6 @@ The system is implemented as a distributed three-tier application:
 restaurant-reservation-app/
 ├─ backend/
 │  ├─ src/
-│  │  ├─ config/
 │  │  ├─ controllers/
 │  │  ├─ db/
 │  │  ├─ middleware/
@@ -70,9 +87,17 @@ restaurant-reservation-app/
 │  ├─ package.json
 │  └─ server.js
 ├─ frontend/
+│  ├─ src/
+│  │  ├─ components/
+│  │  ├─ context/
+│  │  ├─ navigation/
+│  │  ├─ screens/
+│  │  ├─ services/
+│  │  └─ utils/
 │  ├─ assets/
 │  ├─ App.js
 │  ├─ app.json
+│  ├─ index.js
 │  └─ package.json
 ├─ database/
 │  ├─ schema.sql
@@ -86,7 +111,39 @@ restaurant-reservation-app/
 
 ---
 
+## Current Implementation Status
+
+### Completed
+- **Day 1:** architecture, repository structure, database schema, seed data, backend/frontend scaffolding
+- **Day 2:** backend core implementation completed
+  - register/login
+  - JWT protection
+  - restaurants endpoint
+  - reservations CRUD endpoints
+  - Postman-tested backend flows
+- **Day 3:** frontend authentication and restaurant browsing completed
+  - Welcome screen
+  - Register screen
+  - Login screen
+  - persisted JWT session with AsyncStorage
+  - Restaurants list screen
+  - search by name/location
+  - loading, empty, and error states
+  - polished UI for web/mobile preview
+
+### In Progress / Next Step
+- **Day 4:** full reservation form and profile / my reservations screens
+  - create reservation from frontend
+  - view reservation history
+  - edit/delete future reservations
+
+> At the current stage, **Reservation Form** and **Profile / My Reservations** are already included in navigation as placeholders, but their full business functionality will be completed in the next implementation phase.
+
+---
+
 ## Implemented Functionality
+
+## Backend
 
 ### Authentication
 - `POST /register`
@@ -113,6 +170,28 @@ restaurant-reservation-app/
 - only authenticated users can access reservation endpoints
 - each user can view only their own reservations
 - each user can update or delete only their own **future** reservations
+
+## Frontend
+
+### Authentication UI
+- Welcome screen
+- Register screen with validation and success/error feedback
+- Login screen with validation and error feedback
+- authenticated navigation based on JWT session state
+- persisted login session using **AsyncStorage**
+
+### Restaurants UI
+- restaurants list fetched from backend
+- restaurant cards showing:
+  - name
+  - location
+  - short description
+  - **Book now** button
+- search by restaurant **name** or **location**
+- loading state
+- empty state
+- error handling
+- pull-to-refresh support
 
 ---
 
@@ -182,11 +261,25 @@ The backend follows a clean layered structure:
 - **routes** → endpoint mapping
 - **controllers** → request handling and response shaping
 - **services** → business logic
-- **db access** → SQL queries through MariaDB pool
-- **middleware** → JWT auth and error handling
+- **db access** → SQL queries through the MariaDB connection pool
+- **middleware** → JWT auth and global error handling
 - **utils** → shared helpers such as custom errors and JWT generation
 
 This structure supports readability, maintainability, and alignment with the coursework rubric.
+
+---
+
+## Frontend Architecture
+
+The frontend follows a modular structure:
+
+- **screens** → user-facing screens such as Welcome, Register, Login, and Restaurants
+- **navigation** → root stack flow for public and authenticated screens
+- **context** → shared authentication state through `AuthContext`
+- **services** → shared API client configuration using Axios
+- **utils** → helpers such as token persistence through AsyncStorage
+
+This keeps authentication, API communication, screen rendering, and navigation responsibilities clearly separated.
 
 ---
 
@@ -206,6 +299,12 @@ Example:
   "message": "Authorization token is required"
 }
 ```
+
+The frontend also provides user-facing feedback for key actions such as:
+- registration validation errors
+- duplicate email or login failure messages
+- loading indicators during requests
+- empty-state feedback when no restaurants are found
 
 ---
 
@@ -267,20 +366,77 @@ http://localhost:5000
 Useful test endpoints:
 - `GET /health`
 - `GET /db-test`
+- `GET /restaurants`
 
-### 6. Frontend setup
+### 6. Install frontend dependencies
 
-The frontend Expo project skeleton is already included in `frontend/`.
-
-To install dependencies and start it:
+Open a second terminal and run:
 
 ```bash
 cd frontend
 npm install
-npm start
+npx expo install react-native-gesture-handler @react-native-async-storage/async-storage react-native-screens react-native-safe-area-context react-dom react-native-web
+npm install @react-navigation/native @react-navigation/native-stack axios
 ```
 
-> Note: frontend implementation is continued in the next development phase. The backend API is already operational and testable through Postman.
+### 7. Configure the frontend API base URL
+
+Open:
+
+```text
+frontend/src/services/api.js
+```
+
+and set the correct backend URL.
+
+Examples:
+
+- **Expo web / desktop browser:**
+
+```javascript
+const API_BASE_URL = 'http://localhost:5000';
+```
+
+- **Expo Go on a physical device:**
+
+```javascript
+const API_BASE_URL = 'http://YOUR_PC_LOCAL_IP:5000';
+```
+
+- **Android emulator:**
+
+```javascript
+const API_BASE_URL = 'http://10.0.2.2:5000';
+```
+
+### 8. Run the frontend
+
+```bash
+cd frontend
+npx expo start
+```
+
+Useful options:
+- press `w` to open the app in the web browser
+- press `a` to open Android emulator
+- scan the QR code with Expo Go for device testing
+
+---
+
+## Suggested Test Flow
+
+A quick end-to-end test flow for the current implementation:
+
+1. Start the backend
+2. Start the frontend with Expo
+3. Register a new user
+4. Verify redirect to Login and email prefill
+5. Log in and verify navigation to Restaurants
+6. Search by restaurant name or location
+7. Verify empty-state behavior with a non-matching search term
+8. Open **Book now** and confirm the selected restaurant appears in the placeholder screen
+9. Open **Profile**, test **Logout**, and confirm return to the public flow
+10. Refresh the app after login and confirm the session is restored
 
 ---
 
@@ -309,24 +465,18 @@ Project documentation is stored under `docs/`.
 
 Examples:
 - `docs/diagrams/` → architecture material
-- `docs/screenshots/` → API test evidence and UI screenshots
+- `docs/screenshots/` → API evidence and UI screenshots
 - `docs/presentation/` → presentation material
 
----
-
-## Current Status
-
-### Completed
-- Day 1: architecture, database design, backend/frontend scaffolding
-- Day 2: backend core implementation completed
-  - authentication
-  - JWT protection
-  - restaurants endpoint
-  - reservations CRUD
-  - Postman-tested backend flows
-
-### Next Step
-- Day 3: frontend authentication screens and restaurant browsing UI
+Suggested screenshots for the current stage:
+- Welcome screen
+- Register screen
+- Login screen
+- Restaurants list
+- Search result
+- Empty state
+- Reservation placeholder
+- Profile placeholder
 
 ---
 
@@ -338,4 +488,14 @@ This project is being developed as a coursework submission for CN6035 and aims t
 - secure authentication with JWT
 - relational database integration with MariaDB
 - structured implementation and testing workflow
+- presentation-ready progress with screenshots and demo material
+
+---
+
+## Notes
+
+- The backend business logic for reservations is already implemented.
+- The frontend currently covers authentication and restaurant browsing.
+- Full reservation creation and reservation-history management will be completed in the next development phase.
+- Search currently matches the seeded restaurant data values stored in the database.
 

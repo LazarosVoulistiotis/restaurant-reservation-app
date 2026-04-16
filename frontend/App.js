@@ -1,18 +1,22 @@
-import { Text, View, StyleSheet } from 'react-native';
+// Το App.js είναι ο κεντρικός “σκελετός” που ενώνει:
+// authentication context + navigation system + overall app startup.
+
+import 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
+
+import { AuthProvider } from './src/context/AuthContext';
+import RootNavigator from './src/navigation/RootNavigator';
 
 export default function App() {
     return (
-        <View style={styles.container}>
-            <Text>Restaurant Reservation App</Text>
-            <Text>Day 1 setup complete</Text>
-        </View>
+        // Provides global auth state to the app
+        <AuthProvider>
+            {/* Hosts the app navigation tree */}
+            <NavigationContainer>
+                <StatusBar style="dark" />
+                <RootNavigator />
+            </NavigationContainer>
+        </AuthProvider>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});
