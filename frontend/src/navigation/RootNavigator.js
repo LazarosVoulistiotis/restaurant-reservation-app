@@ -1,6 +1,5 @@
-/* Το RootNavigator.js ελέγχει ολόκληρο το navigation flow της εφαρμογής, συνδέοντας το
-authentication state με τα σωστά screens και εξασφαλίζοντας καθαρή μετάβαση μεταξύ public
- και protected περιοχών του app. */
+/* Το RootNavigator.js είναι ο κεντρικός router της εφαρμογής που ενώνει auth flow και
+main app flow, αντικαθιστώντας τα προσωρινά placeholders με τα τελικά reservation και profile screens.*/
 
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,11 +9,12 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RestaurantsScreen from '../screens/RestaurantsScreen';
+import ReservationFormScreen from '../screens/ReservationFormScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
-// Δημιουργούμε το stack object του navigator. (Stack is a container component for arranging elements vertically or horizontally.)
 const Stack = createNativeStackNavigator();
 
-// μικρό βοηθητικό component για το loading state της εφαρμογής
+// Displays a startup loading screen while auth state is being restored.
 function LoadingScreen() {
     return (
         <View style={styles.centered}>
@@ -24,45 +24,6 @@ function LoadingScreen() {
     );
 }
 
-// προσωρινό placeholder screen για το reservation form
-function ReservationPlaceholderScreen({ route }) {
-    const restaurant = route.params?.restaurant;
-
-    return (
-        <View style={styles.centered}>
-            <Text style={styles.placeholderTitle}>Reservation Form</Text>
-            <Text style={styles.placeholderText}>
-                Επόμενο βήμα στην Ημέρα 4.
-            </Text>
-
-            {restaurant ? (
-                <Text style={styles.placeholderText}>
-                    Selected restaurant: {restaurant.name}
-                </Text>
-            ) : null}
-        </View>
-    );
-}
-
-// placeholder screen για Profile / My Reservations
-function ProfilePlaceholderScreen() {
-    const { logout } = useAuth();
-
-    return (
-        <View style={styles.centered}>
-            <Text style={styles.placeholderTitle}>Profile / My Reservations</Text>
-            <Text style={styles.placeholderText}>
-                Θα ολοκληρωθεί στην Ημέρα 4.
-            </Text>
-
-            <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-                <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
-        </View>
-    );
-}
-
-// Ορίζουμε το κεντρικό navigation component της εφαρμογής.
 export default function RootNavigator() {
     const { isAuthenticated, isBootstrapping } = useAuth();
 
@@ -120,13 +81,13 @@ export default function RootNavigator() {
                     />
                     <Stack.Screen
                         name="ReservationForm"
-                        component={ReservationPlaceholderScreen}
+                        component={ReservationFormScreen}
                         options={{ title: 'Reservation' }}
                     />
                     <Stack.Screen
                         name="Profile"
-                        component={ProfilePlaceholderScreen}
-                        options={{ title: 'Profile' }}
+                        component={ProfileScreen}
+                        options={{ title: 'My Reservations' }}
                     />
                 </>
             )}
@@ -134,7 +95,6 @@ export default function RootNavigator() {
     );
 }
 
-// Styles
 const styles = StyleSheet.create({
     centered: {
         flex: 1,
@@ -147,31 +107,8 @@ const styles = StyleSheet.create({
         marginTop: 12,
         color: '#57534E',
     },
-    placeholderTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#7C2D12',
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    placeholderText: {
-        color: '#57534E',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
     headerLink: {
         color: '#B45309',
-        fontWeight: '700',
-    },
-    logoutButton: {
-        marginTop: 20,
-        backgroundColor: '#B45309',
-        paddingHorizontal: 18,
-        paddingVertical: 12,
-        borderRadius: 12,
-    },
-    logoutButtonText: {
-        color: '#FFFFFF',
         fontWeight: '700',
     },
 });

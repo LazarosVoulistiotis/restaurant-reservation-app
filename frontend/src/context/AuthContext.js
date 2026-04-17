@@ -3,15 +3,15 @@
 και token propagation προς το API layer. */
 
 import {
-    createContext, // για το authentication state
-    useCallback, // για να “σταθεροποιούμε” functions μεταξύ renders
-    useContext, // για να διαβάζουμε την τιμή ενός Context.
-    useEffect, // επαναφέρει το αποθηκευμένο session.
-    useMemo, // για το value του provider, ώστε να μην ξαναφτιάχνεται
-    useState, // για local state μέσα στο component
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from 'react';
 
-import api, { setAuthToken } from '../services/api';
+import api, { setAuthFailureHandler, setAuthToken } from '../services/api';
 import { clearToken, getToken, saveToken } from '../utils/authStorage';
 
 const AuthContext = createContext(null);
@@ -34,12 +34,9 @@ export function AuthProvider({ children }) {
         } finally {
             setIsBootstrapping(false);
         }
-    }, []); // Το κενό dependency array σημαίνει ότι η function δημιουργείται μία φορά και παραμένει σταθερή.
+    }, []);
 
-    useEffect(() => {
-        bootstrapAuth();
-    }, [bootstrapAuth]);
-
+    // Registers a new user through the backend API.
     const register = useCallback(async ({ name, email, password }) => {
         const response = await api.post('/register', {
             name,
@@ -50,13 +47,14 @@ export function AuthProvider({ children }) {
         return response.data;
     }, []);
 
+    // Logs in the user, persists the token, and updates API auth headers.
     const login = useCallback(async ({ email, password }) => {
         const response = await api.post('/login', {
             email,
             password,
         });
 
-        const receivedToken = response.data?.token; // Το ?. είναι optional chaining, ώστε αν για κάποιο λόγο το data δεν υπάρχει, να μην σκάσει το app αμέσως.
+        const receivedToken = response.data?.token;
 
         if (!receivedToken) {
             throw new Error('Δεν επιστράφηκε token από το backend.');
@@ -69,18 +67,33 @@ export function AuthProvider({ children }) {
         return response.data;
     }, []);
 
+    // Clears local auth state and removes the persisted token.
     const logout = useCallback(async () => {
         await clearToken();
         setAuthToken(null);
         setToken(null);
     }, []);
 
-    // δημιουργούμε το object που θα δίνει ο provider στο context
+    useEffect(() => {
+        bootstrapAuth();
+    }, [bootstrapAuth]);
+
+    // Registers the global auth-failure handler for expired/invalid tokens.
+    useEffect(() => {
+        setAuthFailureHandler(async () => {
+            await logout();
+        });
+
+        return () => {
+            setAuthFailureHandler(null);
+        };
+    }, [logout]);
+
     const value = useMemo(
         () => ({
             token,
-            isAuthenticated: Boolean(token), // χρήσιμο για navigation logic
-            isBootstrapping, // Εκθέτει το loading state του initial auth restore.
+            isAuthenticated: Boolean(token),
+            isBootstrapping,
             register,
             login,
             logout,

@@ -1,11 +1,13 @@
-// Το api.js ορίζει πώς και πού το frontend επικοινωνεί με το backend,
-// και διαχειρίζεται το JWT header για authenticated requests.
+// The api.js file defines how the frontend communicates with the backend
+// and manages the JWT header for authenticated requests.
 
-import axios from 'axios'; // για HTTP requests προς το backend
+import axios from 'axios';
 
 // Base URL for backend API requests.
-// Use your local IPv4 address when testing from a physical device with Expo Go.
 const API_BASE_URL = 'http://localhost:5000';
+
+// Holds a callback that will run when auth fails.
+let authFailureHandler = null;
 
 // Shared axios instance for all API calls.
 const api = axios.create({
@@ -16,6 +18,11 @@ const api = axios.create({
     },
 });
 
+// Registers a logout-like handler from the auth layer.
+export function setAuthFailureHandler(handler) {
+    authFailureHandler = handler;
+}
+
 // Adds or removes the JWT Authorization header globally.
 export function setAuthToken(token) {
     if (token) {
@@ -24,5 +31,28 @@ export function setAuthToken(token) {
         delete api.defaults.headers.common.Authorization;
     }
 }
+
+// Intercepts API errors and handles expired/invalid auth cleanly.
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const status = error.response?.status;
+        const originalRequest = error.config;
+        const hadAuthHeader = Boolean(
+            originalRequest?.headers?.Authorization ||
+            api.defaults.headers.common.Authorization
+        );
+
+        if (status === 401 && hadAuthHeader && !originalRequest?._authHandled) {
+            originalRequest._authHandled = true;
+
+            if (authFailureHandler) {
+                await authFailureHandler();
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
 
 export default api;

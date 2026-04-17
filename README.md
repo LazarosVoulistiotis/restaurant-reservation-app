@@ -2,7 +2,8 @@
 
 A three-tier mobile restaurant reservation application developed for the **CN6035 – Mobile & Distributed Systems** module.
 
-The project follows a **frontend + backend + database** architecture and is being implemented step by step to satisfy the coursework requirements for:
+The project follows a **frontend + backend + database** architecture and has been implemented step by step to satisfy the coursework requirements for:
+
 - user authentication
 - restaurant browsing and search
 - reservation management
@@ -13,6 +14,7 @@ The project follows a **frontend + backend + database** architecture and is bein
 ## Overview
 
 The **Restaurant Reservation App** allows users to:
+
 - register and log in securely
 - browse available restaurants
 - search restaurants by **name** or **location**
@@ -21,6 +23,7 @@ The **Restaurant Reservation App** allows users to:
 - update or delete their **future** reservations
 
 The system is implemented as a distributed three-tier application:
+
 - **Frontend:** React Native with Expo
 - **Backend:** Node.js with Express REST API
 - **Database:** MariaDB
@@ -30,6 +33,7 @@ The system is implemented as a distributed three-tier application:
 ## Coursework Alignment
 
 This project is designed to align with the CN6035 coursework requirements, which emphasize:
+
 - clean and functional **frontend UI/UX**
 - correct **frontend-backend communication**
 - **JWT-based authentication**
@@ -114,6 +118,7 @@ restaurant-reservation-app/
 ## Current Implementation Status
 
 ### Completed
+
 - **Day 1:** architecture, repository structure, database schema, seed data, backend/frontend scaffolding
 - **Day 2:** backend core implementation completed
   - register/login
@@ -130,14 +135,19 @@ restaurant-reservation-app/
   - search by name/location
   - loading, empty, and error states
   - polished UI for web/mobile preview
-
-### In Progress / Next Step
-- **Day 4:** full reservation form and profile / my reservations screens
+- **Day 4:** reservation flow and profile / my reservations completed
+  - reservation form with validation
   - create reservation from frontend
-  - view reservation history
-  - edit/delete future reservations
+  - reservation history screen
+  - upcoming / past reservation separation
+  - edit future reservations
+  - delete future reservations with confirmation
+  - logout button
+  - basic token-expiration handling
 
-> At the current stage, **Reservation Form** and **Profile / My Reservations** are already included in navigation as placeholders, but their full business functionality will be completed in the next implementation phase.
+### Next Step
+
+- **Day 5:** final testing, README polish, screenshots, presentation material, and demo readiness
 
 ---
 
@@ -170,6 +180,7 @@ restaurant-reservation-app/
 - only authenticated users can access reservation endpoints
 - each user can view only their own reservations
 - each user can update or delete only their own **future** reservations
+- past reservations remain visible only as history
 
 ## Frontend
 
@@ -179,6 +190,7 @@ restaurant-reservation-app/
 - Login screen with validation and error feedback
 - authenticated navigation based on JWT session state
 - persisted login session using **AsyncStorage**
+- basic token-expiration handling with automatic auth reset on invalid / expired token responses
 
 ### Restaurants UI
 - restaurants list fetched from backend
@@ -193,6 +205,29 @@ restaurant-reservation-app/
 - error handling
 - pull-to-refresh support
 
+### Reservation UI
+- reservation form screen
+- selected restaurant summary
+- date, time, and people count fields
+- client-side validation before submit
+- success / error feedback after submission
+- create and edit support from the same form screen
+
+### Profile / My Reservations UI
+- authenticated reservation history screen
+- reservation cards displaying:
+  - restaurant name
+  - location
+  - reservation date
+  - reservation time
+  - people count
+- visual separation between **Upcoming** and **Past** reservations
+- edit button for future reservations
+- delete button for future reservations
+- delete confirmation dialog
+- empty state when no reservations exist
+- logout action from the profile flow
+
 ---
 
 ## REST API Endpoints
@@ -205,6 +240,7 @@ restaurant-reservation-app/
 - `GET /restaurants`
 
 ### Protected Endpoints
+
 These require a valid JWT token in the header:
 
 ```http
@@ -273,10 +309,10 @@ This structure supports readability, maintainability, and alignment with the cou
 
 The frontend follows a modular structure:
 
-- **screens** → user-facing screens such as Welcome, Register, Login, and Restaurants
+- **screens** → user-facing screens such as Welcome, Register, Login, Restaurants, ReservationForm, and Profile
 - **navigation** → root stack flow for public and authenticated screens
 - **context** → shared authentication state through `AuthContext`
-- **services** → shared API client configuration using Axios
+- **services** → shared API client configuration using Axios plus reservation service helpers
 - **utils** → helpers such as token persistence through AsyncStorage
 
 This keeps authentication, API communication, screen rendering, and navigation responsibilities clearly separated.
@@ -286,6 +322,7 @@ This keeps authentication, API communication, screen rendering, and navigation r
 ## Error Handling
 
 The API returns clear JSON responses for common cases:
+
 - `400 Bad Request`
 - `401 Unauthorized`
 - `404 Not Found`
@@ -300,11 +337,14 @@ Example:
 }
 ```
 
-The frontend also provides user-facing feedback for key actions such as:
+The frontend provides user-facing feedback for key actions such as:
+
 - registration validation errors
 - duplicate email or login failure messages
 - loading indicators during requests
 - empty-state feedback when no restaurants are found
+- reservation form validation messages
+- success/error feedback for create, update, and delete actions
 
 ---
 
@@ -423,9 +463,9 @@ Useful options:
 
 ---
 
-## Suggested Test Flow
+## Suggested End-to-End Test Flow
 
-A quick end-to-end test flow for the current implementation:
+A quick test flow for the implemented application:
 
 1. Start the backend
 2. Start the frontend with Expo
@@ -433,16 +473,21 @@ A quick end-to-end test flow for the current implementation:
 4. Verify redirect to Login and email prefill
 5. Log in and verify navigation to Restaurants
 6. Search by restaurant name or location
-7. Verify empty-state behavior with a non-matching search term
-8. Open **Book now** and confirm the selected restaurant appears in the placeholder screen
-9. Open **Profile**, test **Logout**, and confirm return to the public flow
-10. Refresh the app after login and confirm the session is restored
+7. Open **Book now** from a restaurant card
+8. Enter a valid future date, time, and people count
+9. Submit the reservation and verify redirect to **Profile / My Reservations**
+10. Confirm that the reservation appears under **Upcoming**
+11. Edit the future reservation and verify the updated values
+12. Delete the future reservation and verify it is removed from the list
+13. Confirm that past reservations appear only as history
+14. Refresh the app after login and confirm the session is restored
 
 ---
 
 ## Postman Testing
 
 The backend has been tested through Postman for:
+
 - register success and validation cases
 - login success and invalid credentials
 - restaurant listing and search
@@ -450,12 +495,14 @@ The backend has been tested through Postman for:
 - JWT-protected access control
 
 Example tested scenarios include:
+
 - duplicate email
 - invalid email format
 - missing fields
 - no token provided
 - invalid restaurant id
 - past reservation date
+- update/delete attempts for non-future reservations
 
 ---
 
@@ -474,15 +521,20 @@ Suggested screenshots for the current stage:
 - Login screen
 - Restaurants list
 - Search result
-- Empty state
-- Reservation placeholder
-- Profile placeholder
+- Empty search state
+- Reservation form
+- Reservation success / profile notice
+- My Reservations screen
+- Edit future reservation
+- Delete confirmation
+- Architecture diagram
 
 ---
 
 ## Repository Goal
 
 This project is being developed as a coursework submission for CN6035 and aims to demonstrate:
+
 - three-tier system design
 - REST API development
 - secure authentication with JWT
@@ -492,10 +544,30 @@ This project is being developed as a coursework submission for CN6035 and aims t
 
 ---
 
+## Current Outcome
+
+At the current stage, the project supports an end-to-end user flow from:
+
+**register / login → browse restaurants → create reservation → view history → edit/delete future bookings**
+
+This means the application now covers the core business use cases required by the coursework.
+
+---
+
+## Next Phase
+
+The next phase focuses on final submission readiness:
+
+- full regression testing
+- README final polish
+- screenshot collection
+- presentation slides
+- demo preparation
+
+---
+
 ## Notes
 
-- The backend business logic for reservations is already implemented.
-- The frontend currently covers authentication and restaurant browsing.
-- Full reservation creation and reservation-history management will be completed in the next development phase.
+- Full reservation creation and reservation-history management are now implemented on both backend and frontend.
+- The current authenticated default landing screen after app reload is `Restaurants`, while the login session remains persisted.
 - Search currently matches the seeded restaurant data values stored in the database.
-
